@@ -1,6 +1,7 @@
 #![allow(warnings, unused)]
-
-use rltk::{Rltk, GameState, Console, RGB, VirtualKeyCode};
+extern crate rltk;
+use rltk::{Rltk, GameState, Console, RGB};
+extern crate specs;
 use specs::prelude::*;
 
 #[macro_use]
@@ -18,7 +19,8 @@ mod visibility_system;
 use visibility_system::VisibilitySystem;
 
 
-pub struct State { ecs: specs::World }
+pub struct State { pub ecs: specs::World }
+
 impl State {
     fn run_systems(&mut self) {
         let mut vis = VisibilitySystem{};
@@ -47,7 +49,7 @@ fn main() {
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Game")
         .build();
-    let mut gs = State { ecs: specs::World::new() };
+    let mut gs = State { ecs: World::new() };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
@@ -58,13 +60,13 @@ fn main() {
     gs.ecs.insert(map);
 
     gs.ecs.create_entity()
-            .with(Player{})
             .with(Position {x:player_x, y:player_y})
             .with(Renderable {
                 glyph: rltk::to_cp437('@'),
                 fg: RGB::named(rltk::GREEN),
                 bg: RGB::named(rltk::BLACK),
                 })
+            .with(Player{})
             .with(Viewshed{ visible_tiles: Vec::new(), range : 8, dirty: true})
             .build();
 

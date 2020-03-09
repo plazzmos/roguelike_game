@@ -1,6 +1,9 @@
 #![allow(warnings, unused)]
-use rltk::{RGB};
+extern crate specs;
 use specs::prelude::*;
+extern crate specs_derive;
+extern crate rltk;
+use rltk::{RGB};
 
 #[derive(Component)]
 pub struct Position { pub x: i32, pub y: i32 }

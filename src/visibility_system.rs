@@ -18,21 +18,26 @@ impl<'s> System<'s> for VisibilitySystem {
         let (mut map, entities, mut viewshed, position, player) = data;
 
         for (ent, vs, pos) in (&entities, &mut viewshed, &position).join() {
-            vs.visible_tiles.clear();
-            vs.visible_tiles = field_of_view(
-                Point::new(pos.x, pos.y),
-                vs.range,
-                &*map,
-            );
-            vs.visible_tiles.retain(|p|
-                p.x > 0 && p.x < map.width-1 &&
-                p.y > 0 && p.y < map.height-1
-            );
-            let p : Option<&Player> = player.get(ent);
-            if let Some(p) = p {
-                for vis in vs.visible_tiles.iter() {
-                    let idx = map.xy_idx(vis.x, vis.y);
-                    map.revealed_tiles[idx] = true;
+            if vs.dirty {
+                vs.dirty = false;
+                vs.visible_tiles.clear();
+                vs.visible_tiles = field_of_view(
+                    Point::new(pos.x, pos.y),
+                    vs.range,
+                    &*map,
+                );
+                vs.visible_tiles.retain(|p|
+                    p.x > 0 && p.x < map.width-1 &&
+                    p.y > 0 && p.y < map.height-1
+                );
+                let _p : Option<&Player> = player.get(ent);
+                if let Some(_p) = _p {
+                    for t in map.visible_tiles.iter_mut() { *t = false };
+                    for vis in vs.visible_tiles.iter() {
+                        let idx = map.xy_idx(vis.x, vis.y);
+                        map.revealed_tiles[idx] = true;
+                        map.visible_tiles[idx] = true;
+                    }
                 }
             }
         }
