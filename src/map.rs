@@ -113,14 +113,24 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
             match tile {
                 TileType::Floor => {
                     glyph = rltk::to_cp437('.');
-                    fg = RGB::from_f32(0.0, 0.5, 0.5);
+                    fg = RGB::from_f32(0.2, 0.2, 0.4);
                 }
                 TileType::Wall => {
                     glyph = rltk::to_cp437('#');
-                    fg = RGB::from_f32(0.1, 0.6, 0.7);
+                    fg = RGB::from_f32(0.4, 0.4, 0.6);
                 }
             }
-            if !map.visible_tiles[idx] { fg = fg.to_greyscale() }
+            if !map.visible_tiles[idx] {
+                match tile {
+                    TileType::Floor => {
+                        fg = RGB::from_f32(0.1, 0.1, 0.1);
+                    }
+                    TileType::Wall => {
+                        fg = RGB::from_f32(0.3, 0.3, 0.3);
+                    }
+                }
+//                fg = RGB::from_f32(0.3, 0.3, 0.3);/*fg.to_greyscale()*/
+            }
             ctx.set(x, y, fg, RGB::from_f32(0., 0., 0.,), glyph);
         }
         x += 1;
