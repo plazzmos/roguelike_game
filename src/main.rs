@@ -21,11 +21,15 @@ mod monster_ai_system;
 use monster_ai_system::MonsterAI;
 mod map_indexing_system;
 use map_indexing_system::MapIndexingSystem;
+mod melee_combat_system;
+use melee_combat_system::MeleeCombatSystem;
+mod damage_system;
+use damage_system::DamageSystem;
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { Paused, Running }
+pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn }
 
-pub struct State { pub ecs: specs::World, pub runstate : RunState }
+pub struct State { pub ecs: specs::World }
 
 impl State {
     fn run_systems(&mut self) {
@@ -35,21 +39,46 @@ impl State {
         mob.run_now(&self.ecs);
         let mut mapindex = MapIndexingSystem{};
         mapindex.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem{};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
         ctx.cls();
-
-        if self.runstate == RunState::Running {
-            self.run_systems();
-            self.runstate = RunState::Paused;
-        } else {
-            self.runstate = player_input(self, ctx);
+        let mut newrunstate;
+        {
+            let runstate = self.ecs.fetch::<RunState>();
+            newrunstate = *runstate;
         }
+        match newrunstate {
+            RunState::PreRun => {
+                self.run_systems();
+                newrunstate = RunState::AwaitingInput;
+            },
+            RunState::AwaitingInput => {
+                newrunstate = player_input(self, ctx);
+            },
+            RunState::PlayerTurn => {
+                self.run_systems();
+                newrunstate = RunState::MonsterTurn;
+            },
+            RunState::MonsterTurn => {
+                self.run_systems();
+                newrunstate = RunState::AwaitingInput;
+            },
+        }
+        {
+            let mut runwriter = self.ecs.write_resource::<RunState>();
+            *runwriter = newrunstate;
+        }
+        damage_system::delete_the_dead(&mut self.ecs);
 
         draw_map(&self.ecs, ctx);
+
         let position = self.ecs.read_storage::<Position>();
         let render = self.ecs.read_storage::<Renderable>();
         let map = self.ecs.fetch::<Map>();
@@ -65,10 +94,7 @@ fn main() {
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Game")
         .build();
-    let mut gs = State {
-        ecs: World::new(),
-        runstate : RunState::Running,
-    };
+    let mut gs = State { ecs: World::new() };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
@@ -77,8 +103,26 @@ fn main() {
     gs.ecs.register::<Viewshed>();
     gs.ecs.register::<BlocksTile>();
     gs.ecs.register::<CombatStats>();
+    gs.ecs.register::<WantsToMelee>();
+    gs.ecs.register::<SufferDamage>();
 
     let map : Map = Map::new_map_rooms_and_corridors();
+    let (player_x, player_y) = map.rooms[0].center();
+
+    let player_entity = gs.ecs
+        .create_entity()
+        .with(Player{})
+        .with(Name{ name: "Player".to_string() })
+        .with(Position { x:player_x, y:player_y })
+        .with(CombatStats{ max_hp:30, hp:30, defense:2, power:5 })
+        .with(Renderable {
+            glyph: rltk::to_cp437('@'),
+            fg: RGB::named(rltk::GREEN),
+            bg: RGB::named(rltk::BLACK),
+            })
+        .with(Viewshed{ visible_tiles: Vec::new(), range : 8, dirty: true})
+        .build();
+
     let mut rng = rltk::RandomNumberGenerator::new();
     for (i,room) in map.rooms.iter().skip(1).enumerate() {
         let (x,y) = room.center();
@@ -89,6 +133,7 @@ fn main() {
             1 => { glyph = rltk::to_cp437('g'); name = "Goblin".to_string(); },
             _ => { glyph = rltk::to_cp437('o'); name = "Orc".to_string(); },
         }
+
         gs.ecs.create_entity()
             .with(Monster{})
             .with(Name{ name: format!("{} #{}", &name, i) })
@@ -103,22 +148,10 @@ fn main() {
             .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true })
             .build();
     }
-    let (player_x, player_y) = map.rooms[0].center();
     gs.ecs.insert(map);
     gs.ecs.insert(Point::new(player_x, player_y));
-
-    gs.ecs.create_entity()
-            .with(Player{})
-            .with(Name{ name: "Player".to_string() })
-            .with(Position { x:player_x, y:player_y })
-            .with(CombatStats{ max_hp:30, hp:30, defense:2, power:5 })
-            .with(Renderable {
-                glyph: rltk::to_cp437('@'),
-                fg: RGB::named(rltk::GREEN),
-                bg: RGB::named(rltk::BLACK),
-                })
-            .with(Viewshed{ visible_tiles: Vec::new(), range : 8, dirty: true})
-            .build();
+    gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(player_entity);
 
     rltk::main_loop(context, gs);
 }
