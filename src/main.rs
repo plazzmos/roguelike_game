@@ -22,11 +22,10 @@ use monster_ai_system::MonsterAI;
 mod map_indexing_system;
 use map_indexing_system::MapIndexingSystem;
 
-
-pub struct State { pub ecs: specs::World, pub runstate : RunState }
-
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { Paused, Running }
+
+pub struct State { pub ecs: specs::World, pub runstate : RunState }
 
 impl State {
     fn run_systems(&mut self) {
