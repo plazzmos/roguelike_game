@@ -8,23 +8,29 @@ use specs::prelude::*;
 extern crate specs_derive;
 
 mod components;
-pub use components::*;
 mod map;
-pub use map::*;
 mod player;
-use player::*;
 mod rect;
-pub use rect::Rect;
+mod gamelog;
+
 mod visibility_system;
-use visibility_system::VisibilitySystem;
 mod monster_ai_system;
-use monster_ai_system::MonsterAI;
 mod map_indexing_system;
-use map_indexing_system::MapIndexingSystem;
 mod melee_combat_system;
-use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
+mod gui;
+
+pub use components::*;
+pub use map::*;
+use player::*;
+use gamelog::GameLog;
+
+pub use rect::Rect;use visibility_system::VisibilitySystem;
+use monster_ai_system::MonsterAI;
+use map_indexing_system::MapIndexingSystem;
+use melee_combat_system::MeleeCombatSystem;
 use damage_system::DamageSystem;
+
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn }
@@ -87,13 +93,15 @@ impl GameState for State {
             let idx = map.xy_idx(p.x, p.y);
             if map.visible_tiles[idx] { ctx.set(p.x, p.y, r.fg, r.bg, r.glyph); }
         }
+        gui::draw_ui(&self.ecs, ctx);
     }
 }
 fn main() {
     use rltk::RltkBuilder;
-    let context = RltkBuilder::simple80x50()
-        .with_title("Roguelike Game")
-        .build();
+        let context = RltkBuilder::simple80x50()
+            .with_title("Roguelike Game")
+            .build();
+//    context.with_post_scanlines(true);
     let mut gs = State { ecs: World::new() };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
@@ -152,6 +160,7 @@ fn main() {
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(RunState::PreRun);
     gs.ecs.insert(player_entity);
+    gs.ecs.insert(gamelog::GameLog{ entries : vec!["Welcome to Rusty Roguelike".to_string()]});
 
     rltk::main_loop(context, gs);
 }

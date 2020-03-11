@@ -7,6 +7,10 @@ extern crate specs;
 use specs::prelude::*;
 // use crate::components::{Viewshed, Player};
 
+const MAPWIDTH : usize = 80;
+const MAPHEIGHT : usize = 43;
+const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
+
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType { Wall, Floor, }
 
@@ -52,14 +56,14 @@ impl Map {
     }
     pub fn new_map_rooms_and_corridors() -> Map {
         let mut map = Map {
-            tiles : vec![TileType::Wall; 80*50],
+            tiles : vec![TileType::Wall; MAPWIDTH*MAPHEIGHT],
             rooms : Vec::new(),
-            width : 80,
-            height : 50,
-            revealed_tiles : vec![false; 80*50],
-            visible_tiles : vec![false; 80*50],
-            blocked : vec![false; 80*50],
-            tile_content : vec![Vec::new(); 80*50],
+            width : MAPWIDTH as i32,
+            height : MAPHEIGHT as i32,
+            revealed_tiles : vec![false; MAPWIDTH*MAPHEIGHT],
+            visible_tiles : vec![false; MAPWIDTH*MAPHEIGHT],
+            blocked : vec![false; MAPWIDTH*MAPHEIGHT],
+            tile_content : vec![Vec::new(); MAPWIDTH*MAPHEIGHT],
         };
         const MAX_ROOMS : i32 = 30;
         const MIN_SIZE : i32 = 6;
