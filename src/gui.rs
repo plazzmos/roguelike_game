@@ -32,7 +32,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
                 ctx.print_color(
                     left_x, y,
                     RGB::named(rltk::WHITE),
-                    RGB::named(rltk::GREY),
+                    RGB::from_f32(0.2, 0.2, 0.2),
                     s,
                 );
                 let padding = (width - s.len() as i32)-1;
@@ -40,7 +40,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
                     ctx.print_color(
                         arrow_pos.x - i, y,
                         RGB::named(rltk::WHITE),
-                        RGB::named(rltk::GREY),
+                        RGB::from_f32(0.2, 0.2, 0.2),
                         &" ".to_string(),
                     );
                 }
@@ -49,7 +49,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
             ctx.print_color(
                 arrow_pos.x, arrow_pos.y,
                 RGB::named(rltk::WHITE),
-                RGB::named(rltk::GREY),
+                RGB::from_f32(0.2, 0.2, 0.2),
                 &"->".to_string(),
             );
         } else {
@@ -60,7 +60,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
                 ctx.print_color(
                     left_x+1, y,
                     RGB::named(rltk::WHITE),
-                    RGB::named(rltk::GREY),
+                    RGB::from_f32(0.2, 0.2, 0.2),
                     s,
                 );
                 let padding = (width - s.len() as i32)-1;
@@ -68,7 +68,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
                     ctx.print_color(
                         arrow_pos.x + 1 + i, y,
                         RGB::named(rltk::WHITE),
-                        RGB::named(rltk::GREY),
+                        RGB::from_f32(0.2, 0.2, 0.2),
                         &" ".to_string(),
                     );
                 }
@@ -77,7 +77,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
             ctx.print_color(
                 arrow_pos.x, arrow_pos.y,
                 RGB::named(rltk::WHITE),
-                RGB::named(rltk::GREY),
+                RGB::from_f32(0.2, 0.2, 0.2),
                 &"<-".to_string(),
             );
         }
