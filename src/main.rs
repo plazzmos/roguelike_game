@@ -1,8 +1,10 @@
 #![allow(warnings, unused)]
+extern crate serde;
 extern crate rltk;
 use rltk::{Rltk, GameState, Console, RGB, Point};
 extern crate specs;
 use specs::prelude::*;
+use specs::saveload::{ SimpleMarker, SimpleMarkerAllocator };
 
 #[macro_use]
 extern crate specs_derive;
@@ -19,6 +21,7 @@ mod map_indexing_system;
 mod melee_combat_system;
 mod damage_system;
 mod inventory_system;
+mod saveload_system;
 mod gui;
 mod spawner;
 
@@ -41,6 +44,7 @@ pub enum RunState {
     MonsterTurn, ShowInventory, ShowDropItem,
     ShowTargeting { range : i32, item :Entity },
     MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
 }
 
 pub struct State { pub ecs: specs::World }
@@ -109,23 +113,6 @@ impl GameState for State {
                     gui::draw_ui(&self.ecs, ctx);
                 }
             }
-        }
-        /*
-        draw_map(&self.ecs, ctx);
-        {
-            let positions = self.ecs.read_storage::<Position>();
-            let renderables = self.ecs.read_storage::<Renderable>();
-            let map = self.ecs.fetch::<Map>();
-
-            let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
-            data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
-            for (pos, render) in data.iter() {
-                let idx = map.xy_idx(pos.x, pos.y);
-                if map.visible_tiles[idx] {
-                    ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
-                }
-            }
-            gui::draw_ui(&self.ecs, ctx);
         }
         match newrunstate {
             RunState::PreRun => {
@@ -197,12 +184,31 @@ impl GameState for State {
                 }
 
             },
+            RunState::MainMenu{ .. } => {
+                let result = gui::main_menu(self, ctx);
+                match result {
+                    gui::MainMenuResult::NoSelection{ selected } => {
+                        newrunstate = RunState::MainMenu{ menu_selection:selected };
+                    }
+                    gui::MainMenuResult::Selected{ selected } => {
+                        match selected {
+                            gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::LoadGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::Quit => { ::std::process::exit(0); }
+                        }
+                    }
+
+                }
+            }
+            RunState::SaveGame => {
+                saveload_system::save_game(&mut self.ecs);
+                newrunstate = RunState::MainMenu{ menu_selection:gui::MainMenuSelection::LoadGame }
+            }
         }
         {
             let mut runwriter = self.ecs.write_resource::<RunState>();
             *runwriter = newrunstate;
         }
-        */
         damage_system::delete_the_dead(&mut self.ecs);
     }
 }
@@ -235,6 +241,10 @@ fn main() {
     gs.ecs.register::<InflictsDamage>();
     gs.ecs.register::<AreaOfEffect>();
     gs.ecs.register::<Confusion>();
+    gs.ecs.register::<SimpleMarker<SerializeMe>>();
+    gs.ecs.register::<SerializationHelper>();
+
+    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();

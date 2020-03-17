@@ -1,5 +1,6 @@
 #![allow(warnings, unused)]
 extern crate rltk;
+use serde::{ Serialize, Deserialize };
 use rltk::{Rltk, Console, RGB, RandomNumberGenerator, BaseMap, Algorithm2D, Point};
 use super::{Rect};
 use std::cmp::{max, min};
@@ -11,10 +12,10 @@ pub const MAPWIDTH : usize = 80;
 pub const MAPHEIGHT : usize = 43;
 pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum TileType { Wall, Floor, }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
     pub tiles : Vec<TileType>,
     pub rooms : Vec<Rect>,
@@ -23,6 +24,9 @@ pub struct Map {
     pub revealed_tiles : Vec<bool>,
     pub visible_tiles : Vec<bool>,
     pub blocked : Vec<bool>,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
     pub tile_content : Vec<Vec<Entity>>,
 }
 impl Map {

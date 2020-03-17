@@ -7,6 +7,8 @@ use super::{
     map::MAPWIDTH, map::MAPHEIGHT, map::MAPCOUNT,
     rect::Rect,
 };
+use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
+
 const MAX_MONSTERS : i32 = 4;
 const MAX_ITEMS : i32 = 2;
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
@@ -23,6 +25,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
         .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true })
         .with(Name{ name: "Player".to_string() })
         .with(CombatStats{ max_hp: 50, hp: 50, defense: 2, power: 6 })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }
 fn monster<S :ToString>(ecs: &mut World, x: i32, y: i32, glyph : u8, name : S) {
@@ -40,6 +43,7 @@ fn monster<S :ToString>(ecs: &mut World, x: i32, y: i32, glyph : u8, name : S) {
         .with(Name{ name : name.to_string() })
         .with(BlocksTile{})
         .with(CombatStats{ max_hp: 15, hp: 15, defense: 1, power: 4 })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 fn orc(ecs: &mut World, x:i32, y:i32) { monster(ecs, x, y, rltk::to_cp437('o'), "Orc"); }
@@ -69,6 +73,7 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
             bg: RGB::named(rltk::BLACK),
             render_order : 2,
         })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
@@ -85,6 +90,7 @@ fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
             bg: RGB::named(rltk::BLACK),
             render_order : 2,
         })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
@@ -102,6 +108,7 @@ fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
             bg: RGB::named(rltk::BLACK),
             render_order : 2,
         })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
@@ -118,6 +125,7 @@ fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
             bg: RGB::named(rltk::BLACK),
             render_order : 2,
         })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 pub fn random_item(ecs: &mut World, x: i32, y: i32) {
