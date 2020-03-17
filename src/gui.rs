@@ -7,6 +7,60 @@ use super::{components::*, State, Map, GameLog }; // CombatStats, Player, Name, 
 #[derive(PartialEq, Copy, Clone)]
 pub enum ItemMenuResult { Cancel, NoResponse, Selected }
 
+#[derive(PartialEq, Copy, Clone)]
+pub enum MainMenuSelection { NewGame, LoadGame, Quit }
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum MainMenuResult {
+    NoSelection{ selected: MainMenuSelection },
+    Selected{ selected: MainMenuSelection},
+}
+
+pub fn main_menu(gs: &mut State, ctx : &mut Rltk) -> MainMenuResult {
+  MainMenuResult::NoSelection{ selected:MainMenuSelection::NewGame }
+    /*
+    let runstate = gs.ecs.fetch::<RunState>();
+
+    ctx.print_color_centered(
+        15,
+        RGB::named(rltk::YELLOW),
+        RGB::named(rltk::BLACK),
+        "Deep Rock: Rogue M.I.A.",
+    );
+    if let RunState::MainMenu{ menu_selection : selection } = *runstate {
+        if selection == MainMenuSelection::NewGame {
+            ctx.print_color_centered(24, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "New Game");
+        } else {
+            ctx.print_color_centered(24, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "New Game");
+        }
+        if selection == MainMenuSelection::NewGame {
+            ctx.print_color_centered(24, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Load Game");
+        } else {
+            ctx.print_color_centered(24, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Load Game");
+        }
+        if selection == MainMenuSelection::NewGame {
+            ctx.print_color_centered(24, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Quit");
+        } else {
+            ctx.print_color_centered(24, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Quit");
+        }
+
+        match ctx.key {
+            None => return MainMenuResult::NoSelection{ selected:selection },
+            Some(key) => {
+                match key {
+                    VirtualKeyCode::Escape => {},
+                    VirtualKeyCode::Up => {},
+                    VirtualKeyCode::Down => {},
+                    VirtualKeyCode::Return => {},
+                }
+            }
+        }
+    }
+    MainMenuResult::NoSelection{ selected:MainMenuSelection::NewGame }
+    */
+
+}
+
 pub fn ranged_target(gs : &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenuResult, Option<Point>) {
     let player_entity = gs.ecs.fetch::<Entity>();
     let player_pos = gs.ecs.fetch::<Point>();
