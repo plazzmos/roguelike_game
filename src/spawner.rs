@@ -4,6 +4,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{
     components::*,
+    random_table,
     map::MAPWIDTH, map::MAPHEIGHT, map::MAPCOUNT,
     rect::Rect,
 };
@@ -140,6 +141,15 @@ pub fn random_item(ecs: &mut World, x: i32, y: i32) {
         3 => { confusion_scroll(ecs, x, y) },
         _ => { magic_missile_scroll(ecs, x, y) },
     }
+}
+fn room_table() -> random_table::RandomTable {
+    random_table::RandomTable::new()
+        .add("Goblin", 10)
+        .add("Orc", 1)
+        .add("Health Potion", 7)
+        .add("Fireball Scroll", 2)
+        .add("Confusion Scroll", 2)
+        .add("Magic Missile Scroll", 4)
 }
 pub fn spawn_room(ecs: &mut World, room : &Rect) {
     let mut monster_spawn_points : Vec<usize> = Vec::new();

@@ -17,7 +17,7 @@ pub enum MainMenuResult {
 }
 
 pub fn main_menu(gs: &mut State, ctx : &mut Rltk) -> MainMenuResult {
-//  MainMenuResult::NoSelection{ selected:MainMenuSelection::NewGame }
+    let save_exists = super::saveload_system::does_save_exist();
     let runstate = gs.ecs.fetch::<RunState>();
 
     ctx.print_color_centered(
@@ -32,10 +32,12 @@ pub fn main_menu(gs: &mut State, ctx : &mut Rltk) -> MainMenuResult {
         } else {
             ctx.print_color_centered(24, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "New Game");
         }
-        if selection == MainMenuSelection::LoadGame {
-            ctx.print_color_centered(25, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Load Game");
-        } else {
-            ctx.print_color_centered(25, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Load Game");
+        if save_exists {
+            if selection == MainMenuSelection::LoadGame {
+                ctx.print_color_centered(25, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Load Game");
+            } else {
+                ctx.print_color_centered(25, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Load Game");
+            }
         }
         if selection == MainMenuSelection::Quit {
             ctx.print_color_centered(26, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Quit");
@@ -290,6 +292,9 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let combat_stats = ecs.read_storage::<CombatStats>();
     let players = ecs.read_storage::<Player>();
     let log = ecs.fetch::<GameLog>();
+    let map = ecs.fetch::<Map>();
+    let depth = format!("Depth: {}", map.depth);
+    ctx.print_color(2, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &depth);
 
     let mut y = 45;
     for s in log.entries.iter().rev() {

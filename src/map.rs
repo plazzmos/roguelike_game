@@ -13,7 +13,7 @@ pub const MAPHEIGHT : usize = 43;
 pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
 
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
-pub enum TileType { Wall, Floor, }
+pub enum TileType { Wall, Floor, DownStairs }
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
@@ -24,6 +24,7 @@ pub struct Map {
     pub revealed_tiles : Vec<bool>,
     pub visible_tiles : Vec<bool>,
     pub blocked : Vec<bool>,
+    pub depth : i32,
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
@@ -58,7 +59,7 @@ impl Map {
             }
         }
     }
-    pub fn new_map_rooms_and_corridors() -> Map {
+    pub fn new_map_rooms_and_corridors(new_depth : i32) -> Map {
         let mut map = Map {
             tiles : vec![TileType::Wall; MAPWIDTH*MAPHEIGHT],
             rooms : Vec::new(),
@@ -68,6 +69,7 @@ impl Map {
             visible_tiles : vec![false; MAPWIDTH*MAPHEIGHT],
             blocked : vec![false; MAPWIDTH*MAPHEIGHT],
             tile_content : vec![Vec::new(); MAPWIDTH*MAPHEIGHT],
+            depth: new_depth,
         };
         const MAX_ROOMS : i32 = 30;
         const MIN_SIZE : i32 = 6;
@@ -101,6 +103,10 @@ impl Map {
                 map.rooms.push(new_room);
             }
         }
+        let stairs_position = map.rooms[map.rooms.len()-1].center();
+        let stairs_idx = map.xy_idx(stairs_position.0, stairs_position.1);
+        map.tiles[stairs_idx] = TileType::DownStairs;
+
         map
     }
     fn is_exit_valid(&self, x:i32, y:i32) -> bool {
@@ -166,6 +172,10 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
                     glyph = rltk::to_cp437('#');
                     fg = RGB::from_f32(0.4, 0.4, 0.6);
                 }
+                TileType::DownStairs => {
+                    glyph = rltk::to_cp437('>');
+                    fg = RGB::from_f32(0.0, 1.0, 1.0);
+                }
             }
             if !map.visible_tiles[idx] {
                 match tile {
@@ -173,6 +183,9 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
                         fg = RGB::from_f32(0.1, 0.1, 0.1);
                     }
                     TileType::Wall => {
+                        fg = RGB::from_f32(0.3, 0.3, 0.3);
+                    }
+                    TileType::DownStairs => {
                         fg = RGB::from_f32(0.3, 0.3, 0.3);
                     }
                 }
